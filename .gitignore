@@ -1,0 +1,10 @@
+/local-intake/
+/data/raw/
+/hardware/build/
+~$*
+*.eml
+.env
+.venv/
+__pycache__/
+.Xil/
+*.jou
