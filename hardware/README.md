@@ -1,5 +1,7 @@
 # AUP-ZU3 bring-up record
 
+The matching block now has a [C++ HLS kernel, testbench and batch project](hls/README.md). The board session starts after HLS synthesis and co-simulation, with the same zero-cost integration vector.
+
 **Status on 25 November 2026.** The checked workstation exposed no serial port through the Windows serial-port inventory. Vivado, Vitis, Vitis HLS and XSCT were absent from the shell path. No board boot log, image identifier, HLS synthesis report or measured board result was available. The recorded evidence therefore ends at the workstation replay.
 
 | Board session | Evidence to capture | Acceptance |

@@ -1,4 +1,12 @@
-# Reproduce the synthetic baseline
+# Software replay
+
+The team-owned [golden model](golden_model.py) implements median filtering, normalization, complete band-constrained alignment, and threshold classification. It accepts local one-column text or CSV data and returns JSON. It uses only the Python standard library and runs on workstation or ARM Linux with Python 3.8 or newer. [Commands and numeric contract](../docs/design/sdtw.md)
+
+```sh
+python -m unittest discover -s software -p test_golden_model.py -v
+```
+
+## Reproduce the original synthetic baseline
 
 The model lives in [references/hamza-model](../references/hamza-model), a Git submodule pointing at Hamza Kittaneh's commit `63b6728ac48b8ef733e98085a1fd69e4e4b4bf26`. Work from the PocketFilter repository root with Git, Python 3.11, NumPy 1.26.4 and Matplotlib 3.8.0. These are the versions used for this reproduction; upstream also records its original environment in requirements.txt.
 

@@ -4,6 +4,8 @@ PocketFilter investigates how much signal matching a low-power FPGA can take off
 
 **Engineering status · 25 November 2026.** The Python reference model reproduced the expected score, span and decision for three synthetic waveforms. Four additional boundary checks passed. The AUP-ZU3 implementation is in preliminary design. Recorded-read accuracy, board throughput, latency and energy remain unmeasured. [Run evidence](docs/validation/README.md)
 
+The implementation sprint adds a standalone Python golden model and a C++ matching kernel for the AUP-ZU3 Vitis HLS flow. [Implementation and verification](docs/design/sdtw.md)
+
 ## Architecture
 
 The Mermaid overview follows the five blocks and signals in the team’s [Level 1 schematic, final presentation slide 9](docs/design/level-1-schematic.pdf). The implemented workstation model covers preprocessing, matching and reporting. The board partition and transfer mechanism are proposed.
@@ -31,6 +33,17 @@ flowchart TB
 The matcher allows local timing differences while limiting the alignment path to a band around each candidate start. A narrow band reduces work but can exclude a valid alignment. A wide band increases memory and compute cost. The first implementation question is whether the board can preserve the reference model’s decisions within its memory and power budget. [Design decision](academic/ECE396/assignments/04-design-selection.pdf) · [Software flowcharts and interface contracts](docs/design/software.md)
 
 ## Run the baseline
+
+The standalone golden model needs Python 3.8 or newer and reads two headerless waveform CSVs. From the repository root:
+
+```sh
+git submodule update --init -- references/hamza-model
+python software/golden_model.py references/hamza-model/test_inputs/read_001_target_match.csv references/hamza-model/test_inputs/target_ref.csv --width 15 --threshold 30
+```
+
+Add `--hls` to use the kernel's signed 16-bit input format and integer score. The JSON output includes a scale that converts the score back to normalized distance. [Vitis HLS project and testbench](hardware/hls/README.md)
+
+### Reproduce the original sprint record
 
 From a checkout of this repository, use Python 3.11 and Git. These package versions reproduce the tested workstation environment.
 

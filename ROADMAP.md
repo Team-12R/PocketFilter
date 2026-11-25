@@ -14,3 +14,13 @@
 **Review date.** The preliminary design and cumulative report draft are due Monday, November 30, 2026 at 11:59 p.m. Chicago time. The rubric allocates 10 points to the Level 1 schematic, 20 to preliminary design and 10 to simulation. The instructor requested a web URL for the whole report. The report incorporates the existing team schematic directly.
 
 **Sprint exit.** The synthetic baseline and boundary checks are reproducible. Next gates are a second operator replay, recorded-data access, and a documented board boot. C/C++ and HLS bring-up can use the tested tie vector as their first comparison.
+
+## Implementation sprint
+
+- [x] Implement the floating-point golden model and a bounded integer reference mode.
+- [x] Port the matching block to a C++ kernel and prepare the AUP-ZU3 Vitis HLS project.
+- [x] Compare the C++ results against 273 Python reference vectors on the host.
+- [ ] Run Vitis HLS C simulation, synthesis and co-simulation on an AMD tool installation.
+- [ ] Package the IP and compare one processor-to-FPGA transaction with the golden model on the board.
+
+[Algorithm, test evidence and source provenance](docs/design/sdtw.md)
