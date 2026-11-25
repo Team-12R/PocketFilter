@@ -1,0 +1,4 @@
+read_id,best_distance,decision,match_start,match_end,window_width,threshold,runtime_ms,note
+read_001_target_match,17.9474,KEEP,111,205,15,30.0,163.5,Research-only target/background screening prototype
+read_002_warped_match,18.4654,KEEP,122,219,15,30.0,156.41,Research-only target/background screening prototype
+read_003_background_reject,51.097,REJECT,180,275,15,30.0,165.43,Research-only target/background screening prototype

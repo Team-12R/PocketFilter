@@ -1,19 +1,16 @@
-# First sprint Â· reproducible baseline
+# Sprint 01 · preliminary design review
 
-**Sprint review goal:** A teammate can reproduce a software smoke test and see what has been verified on the AUP-ZU3. The report and presentation describe the proposed design. This checklist starts open.
-
-| Work item | Suggested lead from the handoff | Evidence to bring to review |
+| Work item | State | Evidence or next owner |
 | --- | --- | --- |
-| Reproduce the existing Python model | Akbar + Hamza | Record the source commit, dependencies, exact invocation, input fixture and observed output. Have a second teammate repeat it. |
-| Establish the recorded-data baseline | Akbar + Hamza | Confirm access and usage terms for the sponsor's labeled recordings. Record the dataset version, label definition and evaluation split. If access is pending, record the dependency and keep synthetic smoke-test results labeled. |
-| Bring up the AUP-ZU3 | Cindy + David | Record the board revision, toolchain and image versions, boot evidence and one repeatable board sanity check. |
-| Agree on the first integration test | Team | Write down input and output types, units, expected result and tolerance for one fixture that software and hardware can both consume. |
+| Preserve and reproduce the Python reference | Verified on one workstation | [Pinned submodule](references/hamza-model), [runner](software/verify_baseline.py), [observed outputs](docs/validation/README.md). Akbar or Hamza to repeat from a second machine. |
+| Specify software blocks and integration vector | Drafted and exercised on the host | [Interfaces, memory and detailed flowcharts](docs/design/software.md), [first vector](docs/validation/README.md) |
+| Validate against recorded inputs | Awaiting labeled data and permission | Akbar + Hamza to document provenance and freeze evaluation settings |
+| Boot AUP-ZU3 and repeat the vector | Awaiting a board session | Cindy + David to capture the [bring-up record](hardware/README.md) |
+| Locate and incorporate the current Level 1 schematic | Verified in the final presentation | [Level 1 schematic, final presentation slide 9](docs/design/level-1-schematic.pdf). The five blocks and signal labels are visible in the original slide. |
+| Confirm the circuit scope and workshop attendance | Team confirmation outstanding | Identify any custom circuit and its required schematic/datasheets. Confirm one workshop per member in the team's course records. |
 
-## Working checklist
+[Public engineering report draft](academic/ECE396/assignments/05-preliminary-design.pdf) · The local cumulative edition is in the ignored local-intake/Assignment 5 folder.
 
-- [ ] Put the software reproduction steps and fixture description under `software/`.
-- [ ] Record the labeled-data access decision and evaluation method in `docs/validation/`.
-- [ ] Put the board bring-up record and sanity-check output under `hardware/`.
-- [ ] At review, link the evidence, record blockers and select the first C/C++ or HLS comparison.
+**Review date.** The preliminary design and cumulative report draft are due Monday, November 30, 2026 at 11:59 p.m. Chicago time. The rubric allocates 10 points to the Level 1 schematic, 20 to preliminary design and 10 to simulation. The instructor requested a web URL for the whole report. The report incorporates the existing team schematic directly.
 
-Accuracy, latency, throughput, utilization and power each need a defined measurement method. Report observations as they become available. The [design selection report](academic/ECE396/assignments/04-design-selection.pdf) records the original validation proposal.
+**Sprint exit.** The synthetic baseline and boundary checks are reproducible. Next gates are a second operator replay, recorded-data access, and a documented board boot. C/C++ and HLS bring-up can use the tested tie vector as their first comparison.

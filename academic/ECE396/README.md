@@ -1,5 +1,7 @@
 # ECE 396 reports and presentations
 
+The [preliminary design and engineering report draft](assignments/05-preliminary-design.pdf) brings the original slide 9 schematic, software and simulation evidence, the four public report excerpts, and the source code appendix into one document. The complete earlier master is retained in the local cumulative draft.
+
 The four reports below are public reading copies extracted from the team's 83-page cumulative engineering report, saved locally as `Pocket Filter Team 12 R Master Report (3).pdf`. Page numbers refer to that source. The selections preserve the original page content. The full editable archive and supporting materials are available in the team's local checkout.
 
 | Assignment | Source pages included |
