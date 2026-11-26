@@ -4,7 +4,20 @@ PocketFilter investigates how much signal matching a low-power FPGA can take off
 
 **Engineering status · 26 November 2026.** Vitis HLS 2024.2 synthesized the C++ matcher for the AUP-ZU3 and exported its IP. Verilog co-simulation matched the Python reference on 270 synthetic inputs and eight recorded lambda control reads. The board notebook compares four result words for each transaction. Physical performance and labeled nanopore accuracy are open measurements. [Hardware verification](docs/validation/accelerator.md) · [Recorded experiments](docs/validation/recorded.md) · [Build and deploy](hardware/vivado/README.md)
 
-The implementation sprint adds a standalone Python golden model and a C++ matching kernel for the AUP-ZU3 Vitis HLS flow. [Implementation and verification](docs/design/sdtw.md)
+## How PocketFilter works
+
+A nanopore instrument records a changing electrical current. PocketFilter asks a narrow question about a saved recording: where does a short reference waveform fit best, and how much do the two shapes differ there? Two recordings of a similar pattern can run at different speeds. The matcher allows a sample to line up with a neighboring sample, within a configurable window. A lower score means a closer fit. The host compares that score with a threshold to make a replay decision.
+
+For example, suppose a short pulse appears halfway through a long recording and its peak lasts one sample longer than expected. The matcher tries different starting positions, permits the extra sample if the window allows it, and reports the start and end of its best alignment. The operator can inspect that interval and reproduce the score.
+
+### What the team can run
+
+| Component | What it does | Evidence |
+| --- | --- | --- |
+| Python golden model | Defines the expected score and interval for a pair of waveforms. Its integer mode gives the FPGA an exact comparison target. | 1,260 small cases checked against an independent enumeration of legal paths. [Algorithm and tie rules](docs/design/sdtw.md) |
+| C++ accelerator | Moves the repetitive alignment calculations into a design that Vitis HLS translates into digital logic. The ARM processor handles input preparation and decisions. | Native C++ and AMD C simulation agreed with Python on 273 synthetic vectors. [Verification](docs/validation/accelerator.md) |
+| Recorded replay | Reads actual electrical measurements, conditions them and checks all four output words. | Eight lambda controls matched Python in RTL simulation. A separate labeled ECG benchmark exercised the calibration workflow and scored 72/100 on its held-out split. Nanopore classification accuracy still needs independently labeled reads. [Data and splits](docs/validation/recorded.md) |
+| Board integration | Connects the accelerator to processor-controlled memory on the 4 GB or 8 GB AUP-ZU3, builds a board-specific overlay and provides an offline comparison notebook. | Physical acceptance requires loading the matching overlay and saving the notebook results. [Build guide](hardware/vivado/README.md) · [Operator procedure](hardware/pynq/README.md) |
 
 ## Architecture
 
@@ -31,6 +44,37 @@ flowchart TB
 ```
 
 The matcher allows local timing differences while limiting the alignment path to a band around each candidate start. A narrow band reduces work but can exclude a valid alignment. A wide band increases memory and compute cost. The first implementation question is whether the board can preserve the reference model’s decisions within its memory and power budget. [Design decision](academic/ECE396/assignments/04-design-selection.pdf) · [Software flowcharts and interface contracts](docs/design/software.md)
+
+![A width-one alignment window. Each row is a reference sample and each column is a sample after a candidate start. A path through shaded cells includes one horizontal and one vertical step.](docs/design/alignment-band.png)
+
+The illustration shows one legal alignment. PocketFilter sums the absolute differences along each candidate path and returns the least expensive one. [Editable TikZ source](docs/design/alignment-band.tex)
+
+## From software to the board
+
+```mermaid
+flowchart LR
+    P["Python expected outputs"] --> V["Reference vectors"]
+    C["C++ kernel"] --> S["Vitis HLS synthesis"]
+    S --> R["Generated RTL"]
+    V --> X["XSim comparison"]
+    R --> X
+    S --> I["Exported IP"]
+    I --> B["Vivado board design"]
+    B --> T["Place, route and check timing"]
+    T --> A["BIT + HWH for one DDR variant"]
+    A --> N["PYNQ notebook on physical board"]
+    P --> N
+```
+
+For the eight recorded controls, XSim counted 921,371–921,421 cycles per query, about 9.21 ms at the simulated 10 ns clock. Physical replay will add processor, transfer and polling time. The notebook compares status, score and both endpoints and prints the processor-observed dispatch interval. [Cycle reports and measurement boundaries](docs/validation/accelerator.md)
+
+**Check a running Vivado build locally.** From the repository root in the Linux build shell, run the command below. It reads Vivado’s run markers once a minute and exits with Ctrl+C. The build keeps running independently. The first implementation establishes the reference duration for later estimates.
+
+```sh
+watch -n 60 python3 hardware/vivado/progress.py hardware/build/build-boards-resumed.log
+```
+
+For a new run, save the output of `build_boards.sh` to a log and pass that path to the timer.
 
 ## Run the baseline
 
