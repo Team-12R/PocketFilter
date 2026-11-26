@@ -1,4 +1,5 @@
 * text=auto
 *.md text eol=lf
+*.sh text eol=lf
 academic/** -text
 academic/ECE396/README.md text eol=lf

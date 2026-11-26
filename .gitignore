@@ -1,6 +1,7 @@
 /local-intake/
 /data/raw/
 /hardware/build/
+/logs/hls_run_tcl.log
 ~$*
 *.eml
 .env

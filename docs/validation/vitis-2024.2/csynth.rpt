@@ -1,0 +1,278 @@
+
+
+================================================================
+== Synthesis Summary Report of 'sdtw_kernel'
+================================================================
++ General Information: 
+    * Date:           Thu Nov 26 00:46:31 2026
+    * Version:        2024.2 (Build 5238294 on Nov  8 2024)
+    * Project:        pocketfilter_hls
+    * Solution:       solution1 (Vivado IP Flow Target)
+    * Product family: zynquplus
+    * Target device:  xczu3eg-sfvc784-2-e
+    
+
++ Performance & Resource Estimates: 
+    
+    PS: '+' for module; 'o' for loop; '*' for dataflow
+    +-------------------------------------------+------+------+---------+-----------+----------+---------+------+----------+--------+----+-----------+-----------+-----+
+    |                  Modules                  | Issue|      | Latency |  Latency  | Iteration|         | Trip |          |        |    |           |           |     |
+    |                  & Loops                  | Type | Slack| (cycles)|    (ns)   |  Latency | Interval| Count| Pipelined|  BRAM  | DSP|     FF    |    LUT    | URAM|
+    +-------------------------------------------+------+------+---------+-----------+----------+---------+------+----------+--------+----+-----------+-----------+-----+
+    |+ sdtw_kernel                              |     -|  0.00|        -|          -|         -|        -|     -|        no|  8 (1%)|   -|  2692 (1%)|  4137 (5%)|    -|
+    | + sdtw_kernel_Pipeline_VITIS_LOOP_37_1    |     -|  0.00|      515|  5.150e+03|         -|      515|     -|        no|       -|   -|   52 (~0%)|   83 (~0%)|    -|
+    |  o VITIS_LOOP_37_1                        |     -|  7.30|      513|  5.130e+03|         3|        1|   512|       yes|       -|   -|          -|          -|    -|
+    | + sdtw_kernel_Pipeline_VITIS_LOOP_38_2    |     -|  0.00|      131|  1.310e+03|         -|      131|     -|        no|       -|   -|   46 (~0%)|   79 (~0%)|    -|
+    |  o VITIS_LOOP_38_2                        |     -|  7.30|      129|  1.290e+03|         3|        1|   128|       yes|       -|   -|          -|          -|    -|
+    | o VITIS_LOOP_43_3                         |     -|  7.30|        -|          -|     17610|        -|     -|        no|       -|   -|          -|          -|    -|
+    |  + sdtw_kernel_Pipeline_VITIS_LOOP_45_4   |     -|  4.85|       35|    350.000|         -|       35|     -|        no|       -|   -|    8 (~0%)|   67 (~0%)|    -|
+    |   o VITIS_LOOP_45_4                       |     -|  7.30|       33|    330.000|         1|        1|    33|       yes|       -|   -|          -|          -|    -|
+    |  + sdtw_kernel_Pipeline_VITIS_LOOP_73_7   |     -|  4.60|       35|    350.000|         -|       35|     -|        no|       -|   -|   29 (~0%)|  275 (~0%)|    -|
+    |   o VITIS_LOOP_73_7                       |     -|  7.30|       33|    330.000|         2|        1|    33|       yes|       -|   -|          -|          -|    -|
+    |  o VITIS_LOOP_46_5                        |     -|  7.30|    17536|  1.754e+05|       137|        -|   128|        no|       -|   -|          -|          -|    -|
+    |   + sdtw_kernel_Pipeline_VITIS_LOOP_49_6  |     -|  1.26|      134|  1.340e+03|         -|      134|     -|        no|       -|   -|  136 (~0%)|  639 (~0%)|    -|
+    |    o VITIS_LOOP_49_6                      |    II|  7.30|      132|  1.320e+03|         4|        4|    33|       yes|       -|   -|          -|          -|    -|
+    +-------------------------------------------+------+------+---------+-----------+----------+---------+------+----------+--------+----+-----------+-----------+-----+
+
+
+================================================================
+== HW Interfaces
+================================================================
+* M_AXI
++-------------------+------------+------------+---------------+---------+--------+----------+-----------+--------------+--------------+-------------+-------------+-------------------+
+| Interface         | Read/Write | Data Width | Address Width | Latency | Offset | Register | Max Widen | Max Read     | Max Write    | Num Read    | Num Write   | Resource Estimate |
+|                   |            | (SW->HW)   |               |         |        |          | Bitwidth  | Burst Length | Burst Length | Outstanding | Outstanding |                   |
++-------------------+------------+------------+---------------+---------+--------+----------+-----------+--------------+--------------+-------------+-------------+-------------------+
+| m_axi_input_data  | READ_ONLY  | 16 -> 16   | 64            | 0       | slave  | 0        | 0         | 16           | 16           | 16          | 16          | BRAM=2            |
+| m_axi_output_data | WRITE_ONLY | 32 -> 32   | 64            | 0       | slave  | 0        | 0         | 16           | 16           | 16          | 16          | BRAM=2            |
++-------------------+------------+------------+---------------+---------+--------+----------+-----------+--------------+--------------+-------------+-------------+-------------------+
+
+* S_AXILITE Interfaces
++---------------+------------+---------------+--------+----------+
+| Interface     | Data Width | Address Width | Offset | Register |
++---------------+------------+---------------+--------+----------+
+| s_axi_control | 32         | 7             | 16     | 0        |
++---------------+------------+---------------+--------+----------+
+
+* S_AXILITE Registers
++---------------+----------------+--------+-------+--------+----------------------------------+----------------------------------------------------------------------+
+| Interface     | Register       | Offset | Width | Access | Description                      | Bit Fields                                                           |
++---------------+----------------+--------+-------+--------+----------------------------------+----------------------------------------------------------------------+
+| s_axi_control | CTRL           | 0x00   | 32    | RW     | Control signals                  | 0=AP_START 1=AP_DONE 2=AP_IDLE 3=AP_READY 7=AUTO_RESTART 9=INTERRUPT |
+| s_axi_control | GIER           | 0x04   | 32    | RW     | Global Interrupt Enable Register | 0=Enable                                                             |
+| s_axi_control | IP_IER         | 0x08   | 32    | RW     | IP Interrupt Enable Register     | 0=CHAN0_INT_EN 1=CHAN1_INT_EN                                        |
+| s_axi_control | IP_ISR         | 0x0c   | 32    | RW     | IP Interrupt Status Register     | 0=CHAN0_INT_ST 1=CHAN1_INT_ST                                        |
+| s_axi_control | signal_r_1     | 0x10   | 32    | W      | Data signal of signal_r          |                                                                      |
+| s_axi_control | signal_r_2     | 0x14   | 32    | W      | Data signal of signal_r          |                                                                      |
+| s_axi_control | reference_1    | 0x1c   | 32    | W      | Data signal of reference         |                                                                      |
+| s_axi_control | reference_2    | 0x20   | 32    | W      | Data signal of reference         |                                                                      |
+| s_axi_control | signal_size    | 0x28   | 32    | W      | Data signal of signal_size       |                                                                      |
+| s_axi_control | reference_size | 0x30   | 32    | W      | Data signal of reference_size    |                                                                      |
+| s_axi_control | width          | 0x38   | 32    | W      | Data signal of width             |                                                                      |
+| s_axi_control | result_1       | 0x40   | 32    | W      | Data signal of result            |                                                                      |
+| s_axi_control | result_2       | 0x44   | 32    | W      | Data signal of result            |                                                                      |
++---------------+----------------+--------+-------+--------+----------------------------------+----------------------------------------------------------------------+
+
+* TOP LEVEL CONTROL
++-----------+------------+-----------+
+| Interface | Type       | Ports     |
++-----------+------------+-----------+
+| ap_clk    | clock      | ap_clk    |
+| ap_rst_n  | reset      | ap_rst_n  |
+| interrupt | interrupt  | interrupt |
+| ap_ctrl   | ap_ctrl_hs |           |
++-----------+------------+-----------+
+
+
+================================================================
+== SW I/O Information
+================================================================
+* Top Function Arguments
++----------------+-----------+---------------+
+| Argument       | Direction | Datatype      |
++----------------+-----------+---------------+
+| signal         | in        | short const * |
+| reference      | in        | short const * |
+| signal_size    | in        | int           |
+| reference_size | in        | int           |
+| width          | in        | int           |
+| result         | out       | int*          |
++----------------+-----------+---------------+
+
+* SW-to-HW Mapping
++----------------+-------------------+-----------+----------+------------------------------------------+
+| Argument       | HW Interface      | HW Type   | HW Usage | HW Info                                  |
++----------------+-------------------+-----------+----------+------------------------------------------+
+| signal         | m_axi_input_data  | interface |          | channel=0                                |
+| signal         | s_axi_control     | register  | offset   | name=signal_r_1 offset=0x10 range=32     |
+| signal         | s_axi_control     | register  | offset   | name=signal_r_2 offset=0x14 range=32     |
+| reference      | m_axi_input_data  | interface |          | channel=0                                |
+| reference      | s_axi_control     | register  | offset   | name=reference_1 offset=0x1c range=32    |
+| reference      | s_axi_control     | register  | offset   | name=reference_2 offset=0x20 range=32    |
+| signal_size    | s_axi_control     | register  |          | name=signal_size offset=0x28 range=32    |
+| reference_size | s_axi_control     | register  |          | name=reference_size offset=0x30 range=32 |
+| width          | s_axi_control     | register  |          | name=width offset=0x38 range=32          |
+| result         | m_axi_output_data | interface |          | channel=0                                |
+| result         | s_axi_control     | register  | offset   | name=result_1 offset=0x40 range=32       |
+| result         | s_axi_control     | register  | offset   | name=result_2 offset=0x44 range=32       |
++----------------+-------------------+-----------+----------+------------------------------------------+
+
+
+================================================================
+== M_AXI Burst Information
+================================================================
+ Note: All burst requests might be further partitioned into multiple requests during RTL generation based on max_read_burst_length or max_write_burst_length settings.
+
+* Inferred Burst Summary
++-------------------+-----------+----------+-------+-----------------+-----------------------+
+| HW Interface      | Direction | Length   | Width | Loop            | Loop Location         |
++-------------------+-----------+----------+-------+-----------------+-----------------------+
+| m_axi_input_data  | read      | variable | 16    | VITIS_LOOP_37_1 | ../hls/sdtw.cpp:37:26 |
+| m_axi_input_data  | read      | variable | 16    | VITIS_LOOP_38_2 | ../hls/sdtw.cpp:38:26 |
+| m_axi_output_data | write     | 4        | 32    |                 |                       |
++-------------------+-----------+----------+-------+-----------------+-----------------------+
+
+* All M_AXI Variable Accesses
++-------------------+-----------+-----------------------+-----------+--------------+----------+-----------------+-----------------------+------------+-------------------------------------------------------------------------------------------------------+
+| HW Interface      | Variable  | Access Location       | Direction | Burst Status | Length   | Loop            | Loop Location         | Resolution | Problem                                                                                               |
++-------------------+-----------+-----------------------+-----------+--------------+----------+-----------------+-----------------------+------------+-------------------------------------------------------------------------------------------------------+
+| m_axi_input_data  | signal    | ../hls/sdtw.cpp:37:71 | read      | Widen Fail   |          | VITIS_LOOP_37_1 | ../hls/sdtw.cpp:37:26 | 214-353    | Could not widen since type i16 size is greater than or equal to the max_widen_bitwidth threshold of 0 |
+| m_axi_input_data  | signal    | ../hls/sdtw.cpp:37:71 | read      | Inferred     | variable | VITIS_LOOP_37_1 | ../hls/sdtw.cpp:37:26 |            |                                                                                                       |
+| m_axi_input_data  | reference | ../hls/sdtw.cpp:38:74 | read      | Widen Fail   |          | VITIS_LOOP_38_2 | ../hls/sdtw.cpp:38:26 | 214-353    | Could not widen since type i16 size is greater than or equal to the max_widen_bitwidth threshold of 0 |
+| m_axi_input_data  | reference | ../hls/sdtw.cpp:38:74 | read      | Inferred     | variable | VITIS_LOOP_38_2 | ../hls/sdtw.cpp:38:26 |            |                                                                                                       |
+| m_axi_output_data | result    | ../hls/sdtw.cpp:83:20 | write     | Widen Fail   |          |                 |                       | 214-353    | Could not widen since type i32 size is greater than or equal to the max_widen_bitwidth threshold of 0 |
+| m_axi_output_data | result    | ../hls/sdtw.cpp:83:20 | write     | Inferred     | 4        |                 |                       |            |                                                                                                       |
+| m_axi_output_data | result    | ../hls/sdtw.cpp:84:22 | write     | Widen Fail   |          |                 |                       | 214-353    | Could not widen since type i32 size is greater than or equal to the max_widen_bitwidth threshold of 0 |
+| m_axi_output_data | result    | ../hls/sdtw.cpp:84:22 | write     | Inferred     | 4        |                 |                       |            |                                                                                                       |
+| m_axi_output_data | result    | ../hls/sdtw.cpp:85:19 | write     | Widen Fail   |          |                 |                       | 214-353    | Could not widen since type i32 size is greater than or equal to the max_widen_bitwidth threshold of 0 |
+| m_axi_output_data | result    | ../hls/sdtw.cpp:85:19 | write     | Inferred     | 4        |                 |                       |            |                                                                                                       |
+| m_axi_output_data | result    | ../hls/sdtw.cpp:86:17 | write     | Widen Fail   |          |                 |                       | 214-353    | Could not widen since type i32 size is greater than or equal to the max_widen_bitwidth threshold of 0 |
+| m_axi_output_data | result    | ../hls/sdtw.cpp:86:17 | write     | Inferred     | 4        |                 |                       |            |                                                                                                       |
++-------------------+-----------+-----------------------+-----------+--------------+----------+-----------------+-----------------------+------------+-------------------------------------------------------------------------------------------------------+
+
+    * Resolution URL: docs.xilinx.com/access/sources/dita/topic?Doc_Version=2024.2%20English&url=ug1448-hls-guidance&resourceid=XXX-YYY.html (replace XXX-YYY with column value)
+
+================================================================
+== Bind Op Report
+================================================================
++-----------------------------------------+-----+--------+---------------+-----------+------------------------+---------+
+| Name                                    | DSP | Pragma | Variable      | Op        | Impl                   | Latency |
++-----------------------------------------+-----+--------+---------------+-----------+------------------------+---------+
+| + sdtw_kernel                           | 0   |        |               |           |                        |         |
+|   icmp_ln32_fu_436_p2                   |     |        | icmp_ln32     | setgt     | auto                   | 0       |
+|   icmp_ln32_1_fu_442_p2                 |     |        | icmp_ln32_1   | setlt     | auto                   | 0       |
+|   icmp_ln33_fu_448_p2                   |     |        | icmp_ln33     | setgt     | auto                   | 0       |
+|   icmp_ln33_1_fu_454_p2                 |     |        | icmp_ln33_1   | setlt     | auto                   | 0       |
+|   icmp_ln32_2_fu_460_p2                 |     |        | icmp_ln32_2   | setlt     | auto                   | 0       |
+|   and_ln32_fu_466_p2                    |     |        | and_ln32      | and       | auto                   | 0       |
+|   and_ln32_1_fu_472_p2                  |     |        | and_ln32_1    | and       | auto                   | 0       |
+|   and_ln32_2_fu_478_p2                  |     |        | and_ln32_2    | and       | auto                   | 0       |
+|   and_ln32_3_fu_484_p2                  |     |        | and_ln32_3    | and       | auto                   | 0       |
+|   select_ln74_fu_577_p3                 |     |        | select_ln74   | select    | auto_sel               | 0       |
+|   add_ln44_fu_587_p2                    |     |        | add_ln44      | add       | fabric                 | 0       |
+|   icmp_ln43_fu_610_p2                   |     |        | icmp_ln43     | setlt     | auto                   | 0       |
+|   add_ln43_fu_615_p2                    |     |        | add_ln43      | add       | fabric                 | 0       |
+|   add_ln44_1_fu_625_p2                  |     |        | add_ln44_1    | add       | fabric                 | 0       |
+|   sub_ln44_fu_634_p2                    |     |        | sub_ln44      | sub       | fabric                 | 0       |
+|   icmp_ln44_fu_639_p2                   |     |        | icmp_ln44     | setlt     | auto                   | 0       |
+|   icmp_ln46_fu_670_p2                   |     |        | icmp_ln46     | seteq     | auto                   | 0       |
+|   add_ln46_fu_675_p2                    |     |        | add_ln46      | add       | fabric                 | 0       |
+|   select_ln51_fu_699_p3                 |     |        | select_ln51   | select    | auto_sel               | 0       |
+|   cmp64_fu_708_p2                       |     |        | cmp64         | seteq     | auto                   | 0       |
+|   cmp68_fu_715_p2                       |     |        | cmp68         | setne     | auto                   | 0       |
+|   select_ln59_fu_722_p3                 |     |        | select_ln59   | select    | auto_sel               | 0       |
+|   icmp_ln81_fu_644_p2                   |     |        | icmp_ln81     | seteq     | auto                   | 0       |
+|  + sdtw_kernel_Pipeline_VITIS_LOOP_37_1 | 0   |        |               |           |                        |         |
+|    icmp_ln37_fu_100_p2                  |     |        | icmp_ln37     | seteq     | auto                   | 0       |
+|    add_ln37_fu_106_p2                   |     |        | add_ln37      | add       | fabric                 | 0       |
+|  + sdtw_kernel_Pipeline_VITIS_LOOP_38_2 | 0   |        |               |           |                        |         |
+|    icmp_ln38_fu_100_p2                  |     |        | icmp_ln38     | seteq     | auto                   | 0       |
+|    add_ln38_fu_106_p2                   |     |        | add_ln38      | add       | fabric                 | 0       |
+|  + sdtw_kernel_Pipeline_VITIS_LOOP_45_4 | 0   |        |               |           |                        |         |
+|    icmp_ln45_fu_68_p2                   |     |        | icmp_ln45     | seteq     | auto                   | 0       |
+|    add_ln45_fu_74_p2                    |     |        | add_ln45      | add       | fabric                 | 0       |
+|    add_ln45_1_fu_84_p2                  |     |        | add_ln45_1    | add       | fabric                 | 0       |
+|  + sdtw_kernel_Pipeline_VITIS_LOOP_73_7 | 0   |        |               |           |                        |         |
+|    icmp_ln73_fu_119_p2                  |     |        | icmp_ln73     | seteq     | auto                   | 0       |
+|    add_ln73_fu_125_p2                   |     |        | add_ln73      | add       | fabric                 | 0       |
+|    add_ln74_1_fu_135_p2                 |     |        | add_ln74_1    | add       | fabric                 | 0       |
+|    icmp_ln74_fu_183_p2                  |     |        | icmp_ln74     | setlt     | auto                   | 0       |
+|    add_ln74_fu_150_p2                   |     |        | add_ln74      | add       | fabric                 | 0       |
+|    sub_ln74_fu_160_p2                   |     |        | sub_ln74      | sub       | fabric                 | 0       |
+|    best_end_fu_192_p3                   |     |        | best_end      | select    | auto_sel               | 0       |
+|    best_start_fu_200_p3                 |     |        | best_start    | select    | auto_sel               | 0       |
+|    best_cost_1_fu_207_p3                |     |        | best_cost_1   | select    | auto_sel               | 0       |
+|  + sdtw_kernel_Pipeline_VITIS_LOOP_49_6 | 0   |        |               |           |                        |         |
+|    icmp_ln49_fu_254_p2                  |     |        | icmp_ln49     | seteq     | auto                   | 0       |
+|    add_ln49_fu_260_p2                   |     |        | add_ln49      | add       | fabric                 | 0       |
+|    add_ln51_fu_270_p2                   |     |        | add_ln51      | add       | fabric                 | 0       |
+|    add_ln59_fu_281_p2                   |     |        | add_ln59      | add       | fabric                 | 0       |
+|    empty_28_fu_296_p2                   |     |        | empty_28      | sub       | fabric                 | 0       |
+|    add_ln50_fu_306_p2                   |     |        | add_ln50      | add       | fabric                 | 0       |
+|    add_ln50_1_fu_316_p2                 |     |        | add_ln50_1    | add       | fabric                 | 0       |
+|    icmp_ln52_fu_326_p2                  |     |        | icmp_ln52     | setlt     | auto                   | 0       |
+|    icmp_ln52_1_fu_332_p2                |     |        | icmp_ln52_1   | setlt     | auto                   | 0       |
+|    xor_ln52_fu_338_p2                   |     |        | xor_ln52      | xor       | auto                   | 0       |
+|    or_ln52_fu_344_p2                    |     |        | or_ln52       | or        | auto                   | 0       |
+|    icmp_ln55_fu_354_p2                  |     |        | icmp_ln55     | seteq     | auto                   | 0       |
+|    and_ln55_fu_360_p2                   |     |        | and_ln55      | and       | auto                   | 0       |
+|    add_ln61_fu_370_p2                   |     |        | add_ln61      | add       | fabric                 | 0       |
+|    icmp_ln60_fu_381_p2                  |     |        | icmp_ln60     | setlt     | auto                   | 0       |
+|    icmp_ln10_fu_419_p2                  |     |        | icmp_ln10     | setlt     | auto                   | 0       |
+|    predecessor_2_fu_443_p2              |     |        | predecessor   | select    | auto_sel               | 0       |
+|    and_ln60_fu_387_p2                   |     |        | and_ln60      | and       | auto                   | 0       |
+|    sel_tmp1_fu_431_p2                   |     |        | sel_tmp1      | xor       | auto                   | 0       |
+|    sparsemux_7_2_32_1_1_U11             |     |        | predecessor_2 | sparsemux | onehotencoding_realdef | 0       |
+|    icmp_ln64_fu_393_p2                  |     |        | icmp_ln64     | setne     | auto                   | 0       |
+|    add_ln64_fu_399_p2                   |     |        | add_ln64      | add       | fabric                 | 0       |
+|    add_ln64_1_fu_409_p2                 |     |        | add_ln64_1    | add       | fabric                 | 0       |
+|    icmp_ln10_1_fu_463_p2                |     |        | icmp_ln10_1   | setlt     | auto                   | 0       |
+|    predecessor_3_fu_494_p4              |     |        | predecessor_4 | select    | auto_sel               | 0       |
+|    xor_ln55_fu_477_p2                   |     |        | xor_ln55      | xor       | auto                   | 0       |
+|    and_ln64_fu_482_p2                   |     |        | and_ln64      | and       | auto                   | 0       |
+|    sparsemux_7_2_32_1_1_U12             |     |        | predecessor_3 | sparsemux | onehotencoding_realdef | 0       |
+|    icmp_ln66_fu_514_p2                  |     |        | icmp_ln66     | seteq     | auto                   | 0       |
+|    delta_fu_524_p2                      |     |        | delta         | sub       | fabric                 | 0       |
+|    sub_ln68_fu_541_p2                   |     |        | sub_ln68      | sub       | fabric                 | 0       |
+|    select_ln68_fu_547_p3                |     |        | select_ln68   | select    | auto_sel               | 0       |
+|    add_ln68_fu_559_p2                   |     |        | add_ln68      | add       | fabric                 | 0       |
++-----------------------------------------+-----+--------+---------------+-----------+------------------------+---------+
+
+
+================================================================
+== Storage Report
+================================================================
++-----------------------+--------------+-----------+------+------+--------+----------+------+---------+------------------+
+| Name                  | Usage        | Type      | BRAM | URAM | Pragma | Variable | Impl | Latency | Bitwidth, Depth, |
+|                       |              |           |      |      |        |          |      |         | Banks            |
++-----------------------+--------------+-----------+------+------+--------+----------+------+---------+------------------+
+| + sdtw_kernel         |              |           | 8    | 0    |        |          |      |         |                  |
+|   control_s_axi_U     | interface    | s_axilite |      |      |        |          |      |         |                  |
+|   input_data_m_axi_U  | interface    | m_axi     | 2    |      |        |          |      |         |                  |
+|   output_data_m_axi_U | interface    | m_axi     | 2    |      |        |          |      |         |                  |
+|   q_U                 | ram_1p array |           | 1    |      |        | q        | auto | 1       | 16, 512, 1       |
+|   r_U                 | ram_1p array |           | 1    |      |        | r        | auto | 1       | 16, 128, 1       |
+|   rows_U              | ram_2p array |           | 2    |      |        | rows     | auto | 1       | 32, 66, 1        |
++-----------------------+--------------+-----------+------+------+--------+----------+------+---------+------------------+
+
+
+================================================================
+== Pragma Report
+================================================================
+* Valid Pragma Syntax
++-----------+---------------------------------------------------------------+---------------------------------------------------+
+| Type      | Options                                                       | Location                                          |
++-----------+---------------------------------------------------------------+---------------------------------------------------+
+| interface | m_axi port=signal depth=512 offset=slave bundle=input_data    | ../hls/sdtw.cpp:17 in sdtw_kernel, signal         |
+| interface | m_axi port=reference depth=128 offset=slave bundle=input_data | ../hls/sdtw.cpp:18 in sdtw_kernel, reference      |
+| interface | m_axi port=result depth=4 offset=slave bundle=output_data     | ../hls/sdtw.cpp:19 in sdtw_kernel, result         |
+| interface | s_axilite port=signal bundle=control                          | ../hls/sdtw.cpp:20 in sdtw_kernel, signal         |
+| interface | s_axilite port=reference bundle=control                       | ../hls/sdtw.cpp:21 in sdtw_kernel, reference      |
+| interface | s_axilite port=signal_size bundle=control                     | ../hls/sdtw.cpp:22 in sdtw_kernel, signal_size    |
+| interface | s_axilite port=reference_size bundle=control                  | ../hls/sdtw.cpp:23 in sdtw_kernel, reference_size |
+| interface | s_axilite port=width bundle=control                           | ../hls/sdtw.cpp:24 in sdtw_kernel, width          |
+| interface | s_axilite port=result bundle=control                          | ../hls/sdtw.cpp:25 in sdtw_kernel, result         |
+| interface | s_axilite port=return bundle=control                          | ../hls/sdtw.cpp:26 in sdtw_kernel, return         |
++-----------+---------------------------------------------------------------+---------------------------------------------------+
+
+
