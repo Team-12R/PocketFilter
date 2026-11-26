@@ -20,7 +20,12 @@
 - [x] Implement the floating-point golden model and a bounded integer reference mode.
 - [x] Port the matching block to a C++ kernel and prepare the AUP-ZU3 Vitis HLS project.
 - [x] Compare the C++ results against 273 Python reference vectors on the host.
-- [ ] Run Vitis HLS C simulation, synthesis and co-simulation on an AMD tool installation.
-- [ ] Package the IP and compare one processor-to-FPGA transaction with the golden model on the board.
+- [x] Run AMD C simulation and synthesis, export the IP, and verify 270 synthetic vectors and eight recorded controls in Verilog co-simulation.
+- [x] Prepare the Vivado design, PYNQ host, offline packaging and comparison notebook. Bind the host to the generated 4 GB hardware register map.
+- [ ] Verify both variant-specific implementation reports and deliver matched BIT/HWH archives.
+- [ ] Cindy and David to execute the notebook on the physical AUP-ZU3 and retain its results.
+- [ ] Evaluate independently labeled nanopore reads when the sponsor supplies the dataset.
+
+[Vendor reports and requirements traceability](docs/validation/accelerator.md) · [Recorded experiments](docs/validation/recorded.md)
 
 [Algorithm, test evidence and source provenance](docs/design/sdtw.md)

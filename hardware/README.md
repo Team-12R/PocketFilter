@@ -2,7 +2,7 @@
 
 The matching block now has a [C++ HLS kernel, testbench and batch project](hls/README.md). The board session starts after HLS synthesis and co-simulation, with the same zero-cost integration vector.
 
-**Status on 25 November 2026.** The checked workstation exposed no serial port through the Windows serial-port inventory. Vivado, Vitis, Vitis HLS and XSCT were absent from the shell path. No board boot log, image identifier, HLS synthesis report or measured board result was available. The recorded evidence therefore ends at the workstation replay.
+**Status on 26 November 2026.** The AMD 2024.2 tools in Ubuntu WSL ran synthesis and Verilog co-simulation. See the [vendor reports](../docs/validation/accelerator.md), [overlay build](vivado/README.md) and [physical bring-up procedure](pynq/README.md). Board boot and physical measurements remain outstanding.
 
 | Board session | Evidence to capture | Acceptance |
 | --- | --- | --- |

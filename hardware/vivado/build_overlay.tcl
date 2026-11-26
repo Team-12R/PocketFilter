@@ -44,6 +44,9 @@ proc catalog_vlnv {pattern} {
 
 set_param board.repoPaths [list $board_repo]
 set project_dir [file join $build vivado $variant]
+if {[info exists ::env(POCKETFILTER_VIVADO_WORK)]} {
+    set project_dir [file normalize [file join $::env(POCKETFILTER_VIVADO_WORK) $variant]]
+}
 create_project pocketfilter $project_dir -part $part -force
 if {[llength [get_board_parts -quiet $board_part]] != 1} {
     error "Vivado could not load $board_part from $board_repo."
@@ -79,7 +82,6 @@ connect_bd_intf_net [get_bd_intf_pins sdtw_kernel_0/m_axi_output_data] [get_bd_i
 connect_bd_intf_net [get_bd_intf_pins memory_axi/M00_AXI] [get_bd_intf_pins ps/S_AXI_HP0_FPD]
 
 set reset [create_bd_cell -type ip -vlnv [catalog_vlnv xilinx.com:ip:proc_sys_reset:*] reset]
-set_property CONFIG.C_EXT_RESET_HIGH {0} $reset
 set constant [catalog_vlnv xilinx.com:ip:xlconstant:*]
 set locked [create_bd_cell -type ip -vlnv $constant clock_locked]
 set_property CONFIG.CONST_VAL {1} $locked
@@ -95,13 +97,18 @@ fanout ps/pl_clk0 {
     ps/maxihpm0_fpd_aclk ps/saxihp0_fpd_aclk
     control_axi/aclk memory_axi/aclk sdtw_kernel_0/ap_clk reset/slowest_sync_clk
 }
-connect_bd_net [get_bd_pins ps/pl_resetn0] [get_bd_pins reset/ext_reset_in]
+fanout ps/pl_resetn0 {reset/ext_reset_in reset/aux_reset_in}
 connect_bd_net [get_bd_pins clock_locked/dout] [get_bd_pins reset/dcm_locked]
-fanout reset_inactive/dout {reset/aux_reset_in reset/mb_debug_sys_rst}
+connect_bd_net [get_bd_pins reset_inactive/dout] [get_bd_pins reset/mb_debug_sys_rst]
 fanout reset/peripheral_aresetn {control_axi/aresetn memory_axi/aresetn sdtw_kernel_0/ap_rst_n}
 
 assign_bd_address
 validate_bd_design
+foreach polarity {C_EXT_RESET_HIGH C_AUX_RESET_HIGH} {
+    if {[get_property CONFIG.$polarity $reset] ne "0"} {
+        error "PS pl_resetn0 requires active-low reset input ($polarity)."
+    }
+}
 save_bd_design
 puts "Validated the PocketFilter block design for $board_part (Vivado [version -short])."
 if {$stage eq "validate"} {
@@ -142,6 +149,8 @@ foreach artifact [list $bit $hwh] {
 }
 set overlay [file join $build overlay $variant]
 file mkdir $overlay
+file copy -force $timing_report [file join $overlay timing_summary.rpt]
+file copy -force [file join $project_dir utilization.rpt] [file join $overlay utilization.rpt]
 file copy -force $bit [file join $overlay pocketfilter.bit]
 file copy -force $hwh [file join $overlay pocketfilter.hwh]
 puts "Wrote pocketfilter.bit and pocketfilter.hwh in $overlay for $board_part."

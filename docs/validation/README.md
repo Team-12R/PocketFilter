@@ -29,4 +29,4 @@ For a host-to-HLS comparison, begin with read and reference both equal to [0, 1,
 
 ## Recorded-data evaluation
 
-The material available to this sprint contains synthetic fixtures. Access to sponsor-labeled recordings is unconfirmed. Once authorized data are available, record provenance, sample units, independent labels and split by read or source run as appropriate. Freeze preprocessing and decision settings on the development split. Evaluate the held-out set once and report counts as well as rates. Log board throughput, latency, resource use and energy separately when an instrumented board run exists.
+The recorded validation now includes lambda FAST5 port-equivalence checks and a labeled ECG200 surrogate with a frozen threshold. Sponsor-labeled nanopore data and instrumented board results remain open. [Dataset provenance, evaluation and intake](recorded.md) · [Accelerator evidence](accelerator.md)

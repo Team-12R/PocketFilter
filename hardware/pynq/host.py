@@ -49,6 +49,7 @@ class KernelHost:
     def __init__(self, ip, registers, allocate):
         self.ip = ip
         self.allocate = allocate
+        self.last_dispatch_ns = None
         regs = {name.lower(): entry for name, entry in registers.items()}
         ctrl_name = "ctrl" if "ctrl" in regs else "ap_ctrl"
         self.control, = _register_words(regs, ctrl_name)
@@ -96,11 +97,14 @@ class KernelHost:
                     self.ip.write(self.scalars[name], value)
                 deadline = time.monotonic() + timeout
                 _pending.extend(buffers)
+                self.last_dispatch_ns = None
+                started_ns = time.perf_counter_ns()
                 self.ip.write(self.control, 1)
                 while not self.ip.read(self.control) & 2:  # AP_DONE
                     if time.monotonic() >= deadline:
                         raise TimeoutError("Kernel completion timed out. Reboot the board before retrying.")
                     time.sleep(0.001)
+                self.last_dispatch_ns = time.perf_counter_ns() - started_ns
                 _pending.clear()
                 buffers[-1].invalidate()
                 actual = tuple(int(value) for value in buffers[-1])

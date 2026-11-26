@@ -27,4 +27,4 @@ The Python model also reproduced Hamza’s three fixture results using the archi
 | Variable dwell | 18.4654012356 | 18,905 | 122–219 | KEEP |
 | Unrelated pattern | 51.0970359902 | 52,318 | 180–275 | REJECT |
 
-Vitis HLS synthesis, C/RTL co-simulation, timing and board replay require the AMD tools and a board session. The host tests establish numerical equivalence on the exercised inputs.
+Vitis HLS 2024.2 synthesized this kernel and exported Vivado IP. XSim checked the generated RTL on synthetic and recorded inputs. See the [vendor reports and board status](../validation/accelerator.md).

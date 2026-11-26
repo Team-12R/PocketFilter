@@ -1,0 +1,9 @@
+                             latency        interval
+transaction       0:          921421          921421
+transaction       1:          921371          921371
+transaction       2:          921371          921371
+transaction       3:          921371          921371
+transaction       4:          921371          921371
+transaction       5:          921371          921371
+transaction       6:          921371          921371
+transaction       7:          921371               x

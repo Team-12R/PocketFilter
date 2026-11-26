@@ -17,6 +17,8 @@ Cindy and David can use [bringup.ipynb](bringup.ipynb) to check the AUP-ZU3 over
 
 ## Transaction details
 
+The notebook records processor-observed time from the AXI4-Lite start write to polling AP_DONE with a monotonic clock. The interval includes Python, MMIO and polling delays. Acquisition, preprocessing, allocation and cache synchronization fall outside that boundary. Use a separately instrumented replay for first-sample-to-decision latency.
+
 The notebook uses the compiled AXI4-Lite register offsets and pointer widths from the HWH. The host writes the full device address into each pointer, splitting a 64-bit address over two 32-bit words. It allocates physically contiguous buffers at the kernel’s interface depths, flushes the inputs and output sentinel, then launches the IP. After `AP_DONE` it invalidates the output cache and reads four words. A mismatch reports both complete tuples. The host rejects invalid dimensions and unrepresentable addresses before starting a transaction. [PYNQ allocation and cache operations](https://pynq.readthedocs.io/en/v2.7.0/pynq_libraries/allocate.html) · [PYNQ overlay metadata](https://pynq.readthedocs.io/en/v2.7.0/overlay_design_methodology/overlay_design.html)
 
 The default completion timeout is five seconds. After a timeout or interrupt during execution, keep the notebook kernel alive until the board is reset. Buffers remain reserved because the fabric may still access their DDR addresses. Reboot the board before retrying. A missing IP or unsupported register map calls for checking the matching HWH, hardware build and generated HLS driver map.
