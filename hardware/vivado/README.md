@@ -1,5 +1,7 @@
 # Build and deploy the AUP-ZU3 overlay
 
+For the verified 4 GB and 8 GB overlays from the sprint, use the ZIPs and SHA-256 values in the [team handoff](../../HANDOFF.md). The commands below reproduce the build.
+
 Use a shell with matching AMD Vivado and Vitis HLS releases and Zynq UltraScale+ device support. The build target is `xczu3eg-sfvc784-2-e`. Check the 4G or 8G marking on the board and use that variant throughout the build and deployment. Use the matching prebuilt PYNQ image. The commands below assume Bash, Python 3, Git and the repository root as the working directory. [Board markings and SD image](https://github.com/Xilinx/AUP-ZU3) · [Real Digital board support](https://github.com/RealDigitalOrg/aup-zu3-bsp)
 
 ```sh

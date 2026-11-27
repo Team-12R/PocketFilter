@@ -48,6 +48,13 @@ if {[info exists ::env(POCKETFILTER_VIVADO_WORK)]} {
     set project_dir [file normalize [file join $::env(POCKETFILTER_VIVADO_WORK) $variant]]
 }
 create_project pocketfilter $project_dir -part $part -force
+if {[info exists ::env(POCKETFILTER_VIVADO_WORK)]} {
+    # Variants share AXI and kernel IP. Vivado keys cache entries by their
+    # configuration and tool version, including the differing PS presets.
+    set cache [file join [file normalize $::env(POCKETFILTER_VIVADO_WORK)] ip-cache]
+    file mkdir $cache
+    config_ip_cache -use_cache_location $cache
+}
 if {[llength [get_board_parts -quiet $board_part]] != 1} {
     error "Vivado could not load $board_part from $board_repo."
 }

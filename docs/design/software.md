@@ -1,8 +1,55 @@
-# Software preliminary design
+# Software design and interface record
 
 The [existing Level 1 schematic](level-1-schematic.pdf) is slide 9 of the [17-slide final presentation](../../academic/ECE396/presentations/final-presentation.pdf). Its five blocks are data input, control and preprocessing, matching, decision and output, and power. The table below adds software-level details such as inclusive span indices.
 
-## Execution platform
+## Current implementation
+
+The workstation model uses CPython. The AUP-ZU3 uses Python/PYNQ on the ARM processing system and a C++ kernel synthesized by Vitis HLS to programmable logic. Vivado Tcl configures the board preset, clocks, resets and AXI interconnect. The demonstration notebook verifies matching and records processor-observed dispatch time.
+
+```mermaid
+flowchart LR
+    CSV["read_waveform"] --> PP["preprocess"]
+    PP --> Q["quantize"]
+    Q --> M["Python match"]
+    Q --> H["KernelHost.compare"]
+    H --> A["Allocate and flush DDR buffers"]
+    A --> R["Write AXI-Lite addresses, sizes and width"]
+    R --> K["sdtw_kernel"]
+    K --> D["Poll AP_DONE, invalidate and read results"]
+    D --> C["Compare status, score, start and end"]
+    M --> C
+```
+
+| Function | Inputs and outputs | Storage and behavior |
+| --- | --- | --- |
+| `read_waveform` | Path to one numeric sample per line → list of Python floats | Linear in file length. |
+| `preprocess` | Finite samples and positive odd median width → normalized floats | Edge padding and median output are linear in waveform length plus padding. Uses population standard deviation and returns zeros for near-constant input. |
+| `quantize` | Normalized samples → integer codes | Scales by 1024, rounds to nearest with ties to even, checks the signed 16-bit range and retains one output per sample. |
+| `match` | Two conditioned sequences and nonnegative band width → distance and inclusive indices, or `None` | Python evaluates starts sequentially. Each candidate uses a cost table with up to M × min(N, M+W) cells. |
+| `load_overlay` / `KernelHost.compare` | Matched BIT/HWH and integer samples → four signed result words | Binds addresses using HWH. Allocates 1,296 bytes of DDR payload at kernel port capacities, plus runtime allocation overhead. Flushes, starts, polls, invalidates and checks exact equality against Python. |
+| `sdtw_kernel` | N ≤ 512 and M ≤ 128 signed 16-bit samples and W ≤ 16 → four signed 32-bit words | 1,280 bytes of local samples and 264 bytes of rolling cost rows at capacity, plus scalar state. Anchor each candidate, add absolute difference to the minimum legal predecessor, then choose the earliest tied span. |
+
+The PS uses AXI4-Lite at `0xA0000000`. Register offsets for these two builds are control `0x00`, 64-bit signal/reference/result pointers `0x10`/`0x1c`/`0x40`, and 32-bit N/M/W at `0x28`/`0x30`/`0x38`. The kernel reaches DDR through HP0. The result is [status, distance, inclusive start, inclusive end], with status 0 for success, 1 for invalid arguments and 2 for no path. The last three words are −1 on failure. The golden CLI applies the KEEP/REJECT threshold on the host. [Port contract](../../hardware/hls/README.md) · [Board procedure](../../hardware/pynq/README.md)
+
+```mermaid
+flowchart TD
+    A["Validate N, M and W"] -->|Invalid| E["Write status 1 and three sentinels"]
+    A -->|Valid| B["Copy int16 sequences from DDR"]
+    B --> D["For each candidate start, initialize rolling rows"]
+    D --> R["For each reference row and band position, add L1 cost to cheapest valid predecessor"]
+    R --> F["Update best finite ending cost and span"]
+    F --> G{"Another feasible start?"}
+    G -->|Yes| D
+    G -->|No| H{"Found a finite path?"}
+    H -->|Yes| S["Write status 0, score, start and end"]
+    H -->|No| N["Write status 2 and three sentinels"]
+```
+
+## Historical preliminary model
+
+The sections below document Hamza’s NumPy reference and its original workstation verifier at the pinned revision. Their storage estimates and proposed interfaces describe that design stage.
+
+### Execution platform
 
 The executable baseline runs under CPython and NumPy on a workstation. The proposed target is an AUP-ZU3 with the ARM processing system running Python/PYNQ for replay, preprocessing, control and logging. The programmable logic would run a Vitis HLS C/C++ matching kernel. Input packing, numeric precision, DMA framing, register addresses, clock rate and resource allocation are open design decisions. No custom circuit or semiconductor component selection is established for this sprint.
 
