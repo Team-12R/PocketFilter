@@ -22,7 +22,7 @@
 - [x] Compare the C++ results against 273 Python reference vectors on the host.
 - [x] Run AMD C simulation and synthesis, export the IP, and verify 270 synthetic vectors and eight recorded controls in Verilog co-simulation.
 - [x] Prepare the Vivado design, PYNQ host, offline packaging and comparison notebook. Bind the host to the generated 4 GB hardware register map.
-- [ ] Verify both variant-specific implementation reports and deliver matched BIT/HWH archives.
+- [x] Verify both variant-specific implementation reports and deliver matched BIT/HWH archives. [Team handoff](HANDOFF.md)
 - [ ] Cindy and David to execute the notebook on the physical AUP-ZU3 and retain its results.
 - [ ] Evaluate independently labeled nanopore reads when the sponsor supplies the dataset.
 

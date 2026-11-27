@@ -103,6 +103,8 @@ The verifier reads source from a pinned Git commit, generates fresh synthetic in
 
 ## Engineering records
 
+The [team handoff](HANDOFF.md) links the verified 4 GB and 8 GB deployment archives, board acceptance procedure and indexed Assignment 5 evidence.
+
 | Record | Use |
 | --- | --- |
 | [Engineering report draft (PDF)](academic/ECE396/assignments/05-preliminary-design.pdf) | Original Level 1 schematic, preliminary design, simulation results, public design history and code appendix |

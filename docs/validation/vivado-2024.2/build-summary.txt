@@ -1,0 +1,12 @@
+3:****** Vivado v2024.2 (64-bit)
+161:Validated the PocketFilter block design for realdigital.org:aup-zu3-4gb:part0:1.0 (Vivado 2024.2).
+234:****** Vivado v2024.2 (64-bit)
+943:  Number of Unrouted Nets             = 0
+1062:INFO: [Vivado 12-3199] DRC finished with 0 Errors
+1076:write_bitstream completed successfully
+1148:****** Vivado v2024.2 (64-bit)
+1313:Validated the PocketFilter block design for realdigital.org:aup-zu3-8gb:part0:1.0 (Vivado 2024.2).
+1386:****** Vivado v2024.2 (64-bit)
+2095:  Number of Unrouted Nets             = 0
+2214:INFO: [Vivado 12-3199] DRC finished with 0 Errors
+2228:write_bitstream completed successfully
