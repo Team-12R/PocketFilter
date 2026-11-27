@@ -1,117 +1,124 @@
 # PocketFilter
 
-PocketFilter investigates how much signal matching a low-power FPGA can take off an embedded processor. Given a recorded nanopore current trace and a reference waveform, it finds the lowest-cost alignment, then logs the score, sample interval and KEEP or REJECT label for that read. A local replay lets an engineer inspect a decision and repeat it with the same inputs.
+PocketFilter is an FPGA prototype for matching recorded nanopore current waveforms on the Real Digital AUP-ZU3. Given a read window and a shorter reference waveform, it uses window-constrained subsequence dynamic time warping (sDTW) to find the minimum-cost alignment. The matcher returns a distance and the zero-based, inclusive interval in the read. The Python replay applies a configurable threshold to produce a KEEP or REJECT decision.
 
-**Engineering status · 26 November 2026.** Vitis HLS 2024.2 synthesized the C++ matcher for the AUP-ZU3 and exported its IP. Verilog co-simulation matched the Python reference on 270 synthetic inputs and eight recorded lambda control reads. The board notebook compares four result words for each transaction. Physical performance and labeled nanopore accuracy are open measurements. [Hardware verification](docs/validation/accelerator.md) · [Recorded experiments](docs/validation/recorded.md) · [Build and deploy](hardware/vivado/README.md)
-
-## How PocketFilter works
-
-A nanopore instrument records a changing electrical current. PocketFilter asks a narrow question about a saved recording: where does a short reference waveform fit best, and how much do the two shapes differ there? Two recordings of a similar pattern can run at different speeds. The matcher allows a sample to line up with a neighboring sample, within a configurable window. A lower score means a closer fit. The host compares that score with a threshold to make a replay decision.
-
-For example, suppose a short pulse appears halfway through a long recording and its peak lasts one sample longer than expected. The matcher tries different starting positions, permits the extra sample if the window allows it, and reports the start and end of its best alignment. The operator can inspect that interval and reproduce the score.
-
-### What the team can run
-
-| Component | What it does | Evidence |
-| --- | --- | --- |
-| Python golden model | Defines the expected score and interval for a pair of waveforms. Its integer mode gives the FPGA an exact comparison target. | 1,260 small cases checked against an independent enumeration of legal paths. [Algorithm and tie rules](docs/design/sdtw.md) |
-| C++ accelerator | Moves the repetitive alignment calculations into a design that Vitis HLS translates into digital logic. The ARM processor handles input preparation and decisions. | Native C++ and AMD C simulation agreed with Python on 273 synthetic vectors. [Verification](docs/validation/accelerator.md) |
-| Recorded replay | Reads actual electrical measurements, conditions them and checks all four output words. | Eight lambda controls matched Python in RTL simulation. A separate labeled ECG benchmark exercised the calibration workflow and scored 72/100 on its held-out split. Nanopore classification accuracy still needs independently labeled reads. [Data and splits](docs/validation/recorded.md) |
-| Board integration | Connects the accelerator to processor-controlled memory on the 4 GB or 8 GB AUP-ZU3, builds a board-specific overlay and provides an offline comparison notebook. | Physical acceptance requires loading the matching overlay and saving the notebook results. [Build guide](hardware/vivado/README.md) · [Operator procedure](hardware/pynq/README.md) |
+**Implementation status.** The Python golden model and C++ kernel have been verified on a workstation and in Verilog co-simulation. Vivado routed both the 4 GB and 8 GB designs at a 100 MHz clock constraint. Physical board replay, end-to-end performance and accuracy on independently labeled nanopore reads remain open.
 
 ## Architecture
 
-The Mermaid overview follows the five blocks and signals in the team’s [Level 1 schematic, final presentation slide 9](docs/design/level-1-schematic.pdf). The host conditions and quantizes inputs, writes DDR buffer addresses through AXI4-Lite and reads the kernel’s status, distance and interval from DDR.
-
-```mermaid
-flowchart TB
-    files["Recorded samples and reference"] -->|"recorded files"| input["A · Data input"]
-    operator["Operator settings"] -->|"median width, band, threshold"| control
-    subgraph board["AUP-ZU3"]
-      subgraph ps["ARM processing system · Python / PYNQ"]
-        control["B · Replay control and preprocessing"]
-        output["D · Decision and output"]
-      end
-      kernel["C · Programmable logic: window-constrained sDTW"]
-      control -->|"normalized samples, reference and band"| kernel
-      kernel -->|"matching score and completion"| output
-      control -->|"read ID and threshold"| output
-    end
-    input -->|"samples and reference"| control
-    supply["Proposed rechargeable USB-C PD source"] --> power
-    power["E · Regulated board supply"] -.->|"board power"| board
-    output -->|"read ID, score and decision"| log["Local dashboard and run log"]
-```
-
-The matcher allows local timing differences while limiting the alignment path to a band around each candidate start. A narrow band reduces work but can exclude a valid alignment. A wide band increases memory and compute cost. The first implementation question is whether the board can preserve the reference model’s decisions within its memory and power budget. [Design decision](academic/ECE396/assignments/04-design-selection.pdf) · [Software flowcharts and interface contracts](docs/design/software.md)
-
-![A width-one alignment window. Each row is a reference sample and each column is a sample after a candidate start. A path through shaded cells includes one horizontal and one vertical step.](docs/design/alignment-band.png)
-
-The illustration shows one legal alignment. PocketFilter sums the absolute differences along each candidate path and returns the least expensive one. [Editable TikZ source](docs/design/alignment-band.tex)
-
-## From software to the board
+PocketFilter computes the local cost as the absolute difference between two samples. An alignment can advance along either waveform or both, within a band around each candidate start. The band limits allowable timing variation and the number of positions the kernel evaluates. The Python golden model defines the scoring, endpoint and tie behavior.
 
 ```mermaid
 flowchart LR
-    P["Python expected outputs"] --> V["Reference vectors"]
-    C["C++ kernel"] --> S["Vitis HLS synthesis"]
-    S --> R["Generated RTL"]
-    V --> X["XSim comparison"]
-    R --> X
-    S --> I["Exported IP"]
-    I --> B["Vivado board design"]
-    B --> T["Place, route and check timing"]
-    T --> A["BIT + HWH for one DDR variant"]
-    A --> N["PYNQ notebook on physical board"]
-    P --> N
+    INPUT["Read and reference waveforms"] --> CONDITION
+    subgraph PS["ARM processing system"]
+        CONDITION["Median filter, normalize and quantize"]
+        HOST["PYNQ dispatch and result readback"]
+        DECISION["Compare with golden model or apply replay threshold"]
+        CONDITION --> HOST
+        HOST --> DECISION
+    end
+    DDR[("DDR sample and result buffers")]
+    subgraph PL["Programmable logic"]
+        KERNEL["C++ sDTW kernel · Vitis HLS"]
+    end
+    HOST <-->|"Samples and result words"| DDR
+    DDR <-->|"AXI memory transactions"| KERNEL
+    HOST <-->|"AXI4-Lite addresses, sizes, band and control"| KERNEL
 ```
 
-For the eight recorded controls, XSim counted 921,371–921,421 cycles per query, about 9.21 ms at the simulated 10 ns clock. Physical replay will add processor, transfer and polling time. The notebook compares status, score and both endpoints and prints the processor-observed dispatch interval. [Cycle reports and measurement boundaries](docs/validation/accelerator.md)
+The workstation model and board host use Python. Vitis HLS translates the C++ kernel to RTL and exports it as IP. Vivado Tcl configures the clock, reset, processing system and AXI interconnect for the selected DDR variant. The PYNQ demonstration checks each returned word against the integer golden model. [Software design and call graphs](docs/design/software.md) · [Team Level 1 schematic](docs/design/level-1-schematic.pdf)
 
-**Check a running Vivado build locally.** From the repository root in the Linux build shell, run the command below. It reads Vivado’s run markers once a minute and exits with Ctrl+C. The build keeps running independently. The first implementation establishes the reference duration for later estimates.
-
-```sh
-watch -n 60 python3 hardware/vivado/progress.py hardware/build/build-boards-resumed.log
-```
-
-For a new run, save the output of `build_boards.sh` to a log and pass that path to the timer.
-
-## Run the baseline
-
-The standalone golden model needs Python 3.8 or newer and reads two headerless waveform CSVs. From the repository root:
-
-```sh
-git submodule update --init -- references/hamza-model
-python software/golden_model.py references/hamza-model/test_inputs/read_001_target_match.csv references/hamza-model/test_inputs/target_ref.csv --width 15 --threshold 30
-```
-
-Add `--hls` to use the kernel's signed 16-bit input format and integer score. The JSON output includes a scale that converts the score back to normalized distance. [Vitis HLS project and testbench](hardware/hls/README.md)
-
-### Reproduce the original sprint record
-
-From a checkout of this repository, use Python 3.11 and Git. These package versions reproduce the tested workstation environment.
-
-```sh
-python -m venv .venv
-# Activate .venv in your shell, then run:
-python -m pip install numpy==1.26.4 matplotlib==3.8.0
-git submodule update --init -- references/hamza-model
-python software/verify_baseline.py references/hamza-model local-intake/replay
-```
-
-The verifier reads source from a pinned Git commit, generates fresh synthetic inputs, and writes the verified CSV and plot to the destination. A successful run ends with two PASS lines. [Reproduction details](software/README.md)
-
-## Engineering records
-
-The [team handoff](HANDOFF.md) links the verified 4 GB and 8 GB deployment archives, board acceptance procedure and indexed Assignment 5 evidence.
-
-| Record | Use |
+| Interface | Contract |
 | --- | --- |
-| [Engineering report draft (PDF)](academic/ECE396/assignments/05-preliminary-design.pdf) | Original Level 1 schematic, preliminary design, simulation results, public design history and code appendix |
-| [Sprint review](ROADMAP.md) | Evidence delivered, owners and open decisions |
-| [Preliminary design](docs/design/software.md) | Platform split, software call graph, subroutine contracts and memory budget |
-| [Validation](docs/validation/README.md) | Fixture results, timing boundary and first integration vector |
-| [Hardware bring-up](hardware/README.md) | Evidence required for boot, processor replay and the first accelerator comparison |
-| [Design history](academic/ECE396/README.md) | Requirements, alternatives, selection report and design presentations |
+| Waveform input | One finite numeric sample per line in each headerless file. Preprocessing applies an edge-padded median filter and population z-score normalization. |
+| Accelerator input | Signed 16-bit samples scaled by 1024. Maximum read and reference lengths are 512 and 128 samples. Band half-width is 0–16 samples. |
+| Accelerator output | Four signed 32-bit words in order: status, integer distance, start and end. Status 0 is success, 1 is invalid input and 2 is no feasible path. Status 1 or 2 returns −1 in the remaining words. |
 
-Team 12-R develops PocketFilter at the University of Illinois Chicago. The [team's SquiggleFilter import](https://github.com/Team-12R/SquiggleFilter) preserves the [research reference](https://github.com/TimD1/SquiggleFilter). The sprint uses [Hamza Kittaneh’s pinned model](https://github.com/Katanehh/PocketFilter-Team12R/tree/63b6728ac48b8ef733e98085a1fd69e4e4b4bf26).
+![A width-one alignment band showing valid cells and a legal path through the read and reference sample grid.](docs/design/alignment-band.png)
+
+[Algorithm specification](docs/design/sdtw.md) · [Editable TikZ figure](docs/design/alignment-band.tex)
+
+## Quick start
+
+Use Python 3.11 and a POSIX-compatible shell from the repository root. The example uses identical three-sample waveforms and runs without third-party Python packages, FPGA tools or submodules.
+
+```sh
+mkdir -p hardware/build
+printf '0\n1\n0\n' > hardware/build/example.csv
+python3 software/golden_model.py hardware/build/example.csv hardware/build/example.csv \
+  --median 1 --width 0 --threshold 0 --hls
+```
+
+Expected output:
+
+```json
+{"match": {"distance": 0, "start": 0, "end": 2}, "distance_scale": 1024, "decision": "KEEP"}
+```
+
+The distance divided by `distance_scale` gives the score in normalized units. For floating-point replay, omit `--hls`. For the native C++ testbench, use a C++17 compiler:
+
+```sh
+python3 hardware/hls/generate_vectors.py hardware/build/vectors.txt
+c++ -std=c++17 -O2 -Wno-unknown-pragmas \
+  hardware/hls/sdtw.cpp hardware/hls/testbench.cpp -o hardware/build/sdtw-test
+hardware/build/sdtw-test hardware/build/vectors.txt
+```
+
+This command runs 270 synthetic vectors. The archived baseline adds three pinned fixtures. [Archived model reproduction and dependencies](software/README.md) · [Native and HLS test procedures](hardware/hls/README.md)
+
+## Verification
+
+| Layer | Observed result |
+| --- | --- |
+| Python reference | 1,260 small inputs agreed with independent enumeration of legal paths. |
+| Native C++ and Vitis C simulation | Each matched all 273 synthetic vectors, including the three archived fixtures. |
+| Verilog co-simulation | Exact agreement on all four result words for 270 synthetic inputs and eight recorded lambda controls. The recorded queries took 921,371–921,421 simulated cycles each. |
+| PYNQ host | Seven workstation tests passed for register binding, memory and cache handling, and result checks. The host bound to both generated register maps. |
+| Vivado 2024.2 | Both routed designs met the 100 MHz constraint with +6.149 ns worst setup slack, +0.010 ns worst hold slack and zero routed design-rule findings. Each used 5,355 LUTs, 8,282 registers, 1.5 block RAM tiles and zero DSPs. |
+
+At the simulated 10 ns clock, the recorded queries took about 9.21 ms each in the kernel. Physical measurements must account for preprocessing, memory transfers, host dispatch and decision logging. A separate ECG200 experiment classified 72 of 100 held-out waveforms correctly and documents the threshold calibration workflow. [Verification reports](docs/validation/accelerator.md) · [Routed reports](docs/validation/vivado-2024.2) · [Recorded-data methods](docs/validation/recorded.md)
+
+## Build and deploy
+
+### Build from source
+
+Use AMD Vitis HLS and Vivado 2024.2 with Zynq UltraScale+ device support. In a Linux shell with the AMD tools on PATH, export the kernel IP, then build the overlay with the Real Digital board preset. Set the last argument to the DDR capacity printed on the target board.
+
+```sh
+mkdir -p hardware/build
+git clone https://github.com/RealDigitalOrg/aup-zu3-bsp.git hardware/build/bsp
+git -C hardware/build/bsp checkout b595ecdf37c7204129517de1773b0895bcdcc2ed
+POCKETFILTER_PYTHON=python3 POCKETFILTER_HLS_STAGE=ip \
+  vitis-run --mode hls --tcl hardware/hls/run_hls.tcl
+bash hardware/vivado/build_boards.sh hardware/build/bsp/board-files 4gb
+```
+
+The build stages the BIT file, matching HWH metadata and routed reports under `hardware/build/overlay/4gb/` and creates a timestamped deployment ZIP. [Build options and monitor](hardware/vivado/README.md) · [Vivado stage monitor](hardware/vivado/progress.py)
+
+### Run the board acceptance test
+
+| DDR marking | Deployment archive | ZIP SHA-256 |
+| --- | --- | --- |
+| 4G | [4 GB archive](deployment/pocketfilter-4gb.zip) | `d5a0ad55bd4126f97e0ca604ecb9b1fc00e99ca24d5a325d8ed722f2e412f3e7` |
+| 8G | [8 GB archive](deployment/pocketfilter-8gb.zip) | `c92d81f526f01162bbce785d017b04a29657ad827fe98f1d7b5b6eefb29f5340` |
+
+1. Select the archive and PYNQ image that match the board's DDR marking. Compare the archive hash with the table using `sha256sum` on Linux or `Get-FileHash -Algorithm SHA256` in PowerShell.
+2. Extract the archive into the board's Jupyter workspace. Open `hardware/pynq/bringup.ipynb` and run all cells with exclusive access to the overlay.
+3. Confirm the three transactions return `(0, 0, 0, 2)`, `(0, 2, 1, 2)` and `(2, -1, -1, -1)`. Save the executed notebook with the board revision, PYNQ image identifier and archive hash.
+
+[Build provenance](HANDOFF.md#deploy-on-the-board) · [PYNQ setup and troubleshooting](hardware/pynq/README.md)
+
+## Repository layout
+
+| Path | Contents |
+| --- | --- |
+| [`software/`](software/) | Python golden model, replay tools and recorded-waveform evaluation |
+| [`hardware/hls/`](hardware/hls/) | C++ kernel, vector generator, testbench and HLS flow |
+| [`hardware/vivado/`](hardware/vivado/) | Board integration Tcl, build scripts and run monitor |
+| [`hardware/pynq/`](hardware/pynq/) | Board host, workstation tests and acceptance notebook |
+| [`deployment/`](deployment/) | Board-specific archives with checksums and provenance |
+| [`docs/design/`](docs/design/) and [`docs/validation/`](docs/validation/) | Architecture, interfaces, test evidence and tool reports |
+| [`references/`](references/) and [`academic/ECE396/`](academic/ECE396/) | Pinned baseline and project design archive |
+
+PocketFilter is a University of Illinois Chicago engineering capstone by Team 12-R. The repository preserves the selected design alternative and its requirements alongside the current implementation. [Design selection](academic/ECE396/assignments/04-design-selection.pdf) · [Engineering handoff](HANDOFF.md) · [Roadmap](ROADMAP.md) · [SquiggleFilter research reference](https://github.com/Team-12R/SquiggleFilter/tree/21558e9701141c93c28a9f9c9c0316d2a50c5dfb)
